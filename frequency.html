@@ -1,0 +1,96 @@
+<style>
+
+#b {
+    position:fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: black;
+}
+
+</style>
+<canvas id="b"></canvas><audio id="a"></audio>
+<script>
+    c = b.getContext('2d');
+    l = 200;
+    speed = 0.01
+    volume = [];
+    alterne = true;
+    f = 0;
+    t = 0;
+    line = 20;
+
+    onload = function update(){
+
+        requestAnimationFrame(update);
+        
+        //init
+        if(!window.time){
+            time = 0;
+            frame = 0;
+            timeNextFrame = 0; 
+            for(j = 0; j < line ; j++){
+                sine = [];
+                for(i = 1; i < l+1; i++){
+                    sine.push({x:i * ( 1 / ( l + 1 )), y:0 , f: Math.sin(i*(2 * Math.PI * f / l)), ph: - (Math.PI) / j});// i * ( 2 * Math.PI / l )
+                }
+                volume.push(sine);
+            }
+        }
+        currentTime = performance.now() / 1000;
+        
+        while(time < currentTime){
+            while(time < timeNextFrame){
+                time += 1 / 16384;
+            }
+            frame++;
+            timeNextFrame  += 1/60;
+
+            //update visuals
+            
+            (alterne == true) ? f+=speed : f-=speed;
+            (alterne == true) ? t+=speed : t-=speed;
+            if(f > 2 * Math.PI){
+                alterne = false;
+            }
+            if(f < -2 * Math.PI){
+                alterne = true;
+            }
+            volume.forEach(v => {
+                    
+                v.forEach(s => {
+                    
+                    T = t * f;
+                    s.y = s.f * Math.sin(T + s.ph); // + 1 / 10 * s.f * Math.sin(2 * t + Math.PI/2 + s.ph);
+                    s.f = Math.sin(v.indexOf(s) * (2 * Math.PI * f / l)); // + 1 / 10 * Math.sin(5 * v.indexOf(s) * (2 * Math.PI * f / l) + s.ph);
+                    
+                });
+            });
+        }
+
+        //render visual
+        H = b.height = 512;
+        W = b.width = 0 | H * innerWidth / innerHeight;
+        c.translate(0, H/2);
+        
+        c.shadowBlur = 24;
+        
+        volume.forEach(v => {
+            c.beginPath(); 
+            v.forEach(s => { 
+                c.lineTo(s.x * W,s.y * H / 3);
+            });
+            c.shadowColor = c.strokeStyle = 'rgb(' + 10*volume.indexOf(v) + ',0' + ',' + 10*volume.indexOf(v) + ')';
+            c.stroke();
+        });
+        
+        //c.arc(s.x * W,s.y * H / 3,1,0,2*Math.PI);
+        // sine.forEach(s => {
+        //     c.beginPath();
+        //     c.arc(s.x * W,s.y * H / 3,1,0,2*Math.PI);
+        //     c.stroke();
+        // });
+
+    }
+</script>
